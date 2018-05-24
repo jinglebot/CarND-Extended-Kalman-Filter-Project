@@ -37,35 +37,13 @@ FusionEKF::FusionEKF() {
     * Set the process and measurement noises
   */
 
-  // State Transition Matrix
+  // State Transition Matrix F
   float dt;
   F = MatrixXd(4, 4);
-  F << 1, 0, dt, 0,
-      0, 1, 0, dt,
+  F << 1, 0, 1, 0,
+      0, 1, 0, 1,
       0, 0, 1, 0,
       0, 0, 0, 1;
-
-  // Process Covariance Matrix
-  float q11, q13, q22, q24, q31, q33, q42, q44;
-  float dt2 = dt * dt;
-  float dt3 = dt2 * dt;
-  float dt4 = dt3 * dt;
-  float noise_ax = 9;
-  float noise_ay = 9;
-  q11 = dt4 * noise_ax / 4;
-  q13 = dt3 * noise_ax / 2;
-  q22 = dt4 * noise_ay / 4;
-  q24 = dt3 * noise_ay / 2;
-  q31 = dt3 * noise_ax / 2;
-  q33 = dt2 * noise_ax;
-  q42 = dt3 * noise_ay / 2;
-  q44 = dt2 * noise_ay;
-
-  Q = MatrixXd(4, 4);
-  Q << q11, 0, q13, 0,
-      0, q22, 0, q24,
-      q31, 0 q33, 0,
-      0, q42, 0, q44;
 
   H_laser_ << 1, 0, 0, 0,
               0, 1, 0, 0;
@@ -94,20 +72,27 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     cout << "EKF: " << endl;
     ekf_.x_ = VectorXd(4);
     ekf_.x_ << 1, 1, 1, 1;
+    ekf_.P_ = MatrixXd(4, 4);
+    ekf_.P_ << 1, 0, 0, 0,
+              0, 1, 0, 0,
+              0, 0, 1000, 0,
+              0, 0, 0, 1000;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
       /**
       Convert radar from polar to cartesian coordinates and initialize state.
       */
+      //ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], measurement_pack.raw_measurements_[2], 0;
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-      //ekf_.x_ << 1, 1, 1, 1;
+      ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
     }
 
     // done initializing, no need to predict or update
+    previous_timestamp_ = measurement_pack.timestamp_;
     is_initialized_ = true;
     return;
   }
@@ -140,6 +125,38 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     // Radar updates
   } else {
     // Laser updates
+    dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0; //dt - expressed in seconds
+    previous_timestamp_ = measurement_pack.timestamp_;
+
+    F << 1, 0, dt, 0,
+      0, 1, 0, dt,
+      0, 0, 1, 0,
+      0, 0, 0, 1;
+
+    // Process Covariance Matrix Q
+    float q11, q13, q22, q24, q31, q33, q42, q44;
+    float dt2 = dt * dt;
+    float dt3 = dt2 * dt;
+    float dt4 = dt3 * dt;
+    float noise_ax = 9;
+    float noise_ay = 9;
+    q11 = dt4 * noise_ax / 4;
+    q13 = dt3 * noise_ax / 2;
+    q22 = dt4 * noise_ay / 4;
+    q24 = dt3 * noise_ay / 2;
+    q31 = dt3 * noise_ax / 2;
+    q33 = dt2 * noise_ax;
+    q42 = dt3 * noise_ay / 2;
+    q44 = dt2 * noise_ay;
+
+    Q = MatrixXd(4, 4);
+    Q << q11, 0, q13, 0,
+        0, q22, 0, q24,
+        q31, 0 q33, 0,
+        0, q42, 0, q44;
+
+    ekf_.Update(measurement_pack.raw_measurements_);
+
   }
 
   // print the output
