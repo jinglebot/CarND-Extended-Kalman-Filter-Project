@@ -1,7 +1,7 @@
 #include "kalman_filter.h"
 
 using Eigen::MatrixXd;
-using Eigen::VectorXd;
+		using Eigen::VectorXd;
 
 // Please note that the Eigen library does not initialize 
 // VectorXd or MatrixXd objects with zeros upon creation.
@@ -37,10 +37,11 @@ void KalmanFilter::Update(const VectorXd &z) {
   VectorXd y;
   MatrixXd S;
   MatrixXd K;
-  MatrixXd Ht = H_.transpose(); 
+  MatrixXd Ht; 
   MatrixXd I = MatrixXd::Identity(2, 2);
 
   y = z - H_ * x_;
+  Ht = H_.transpose();
   S = H_ * P_ * Ht + R_;
   K = P_ * Ht * S.inverse();
 
@@ -56,10 +57,21 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   VectorXd y;
   MatrixXd S;
   MatrixXd K;
-  MatrixXd Ht = H_.transpose(); 
+  MatrixXd Ht; 
   MatrixXd I = MatrixXd::Identity(3, 3);
 
-  y = z - H_ * x_;
+  float x = x_(0);
+  float y = x_(1);
+  float vx = x_(2);
+  float vy = x_(3);
+
+  float rho = sqrt(x*x + y*y);
+  float theta = atan2(y,x);
+  float rho_dot = (x*vx + y*vy)/rho;
+  VectorXd z_pred << rho, theta, rho_dot;
+
+  y = z - z_pred;
+  Ht = H_.transpose();
   S = H_ * P_ * Ht + R_;
   K = P_ * Ht * S.inverse();
 
