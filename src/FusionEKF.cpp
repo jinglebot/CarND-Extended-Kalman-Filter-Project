@@ -38,7 +38,6 @@ FusionEKF::FusionEKF() {
   */
 
   // State Transition Matrix F
-  float dt;
   ekf_.F_ = MatrixXd(4, 4);
   ekf_.F_ <<  1, 0, 1, 0,
               0, 1, 0, 1,
@@ -112,7 +111,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
      * Update the process noise covariance matrix.
      * Use noise_ax = 9 and noise_ay = 9 for your Q matrix.
    */
-
+  float dt;
   dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1000000.0; //dt - expressed in seconds
   previous_timestamp_ = measurement_pack.timestamp_;
 
@@ -141,7 +140,7 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
   ekf_.Q_ = MatrixXd(4, 4);
   ekf_.Q_ <<  q11, 0, q13, 0,
               0, q22, 0, q24,
-              q31, 0 q33, 0,
+              q31, 0, q33, 0,
               0, q42, 0, q44;
 
   ekf_.Predict();
@@ -158,12 +157,6 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-
-    //check division by zero
-    //if (pow(pow(px,2) + pow(py,2),0.5) == 0 || pow(pow(px,2) + pow(py,2),1.5) == 0) {
-    //  cout << "Error: division by zero\n";
-    //    return x_state;
-    }
 
     Hj_ = tools.CalculateJacobian(ekf_.x_);
     ekf_.H_ = Hj_;
