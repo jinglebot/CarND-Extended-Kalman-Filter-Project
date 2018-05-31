@@ -16,9 +16,10 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
     * Calculate the RMSE here.
   */
 	VectorXd rmse;
-	rmse << 0, 0, 0, 0;
+	rmse << 1, 1, 1, 1;
 
 	//  * the estimation vector size should not be zero
+	/*
 	if (estimations.size() <= 0) {
 	    cout << "Error: estimation vector size should not be zero\n";
 	    return rmse;
@@ -44,6 +45,7 @@ VectorXd Tools::CalculateRMSE(const vector<VectorXd> &estimations,
 	rmse = rmse/estimations.size();
 	rmse = rmse.array().sqrt();
 
+	*/
 	return rmse;
 }
 
@@ -60,7 +62,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	float vy = x_state(3);
 
 	//check division by zero
-	if (pow(pow(px,2) + pow(py,2),0.5) > 0.0001 || pow(pow(px,2) + pow(py,2),1.5) > 0.0001) {
+	if ((pow(px,2) + pow(py,2)) > 0.0001) {
 		cout << "Error: division by zero\n";
 	    return Hj_;
 	}
