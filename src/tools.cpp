@@ -60,7 +60,7 @@ MatrixXd Tools::CalculateJacobian(const VectorXd& x_state) {
 	float vy = x_state(3);
 
 	//check division by zero
-	if (pow(pow(px,2) + pow(py,2),0.5) == 0 || pow(pow(px,2) + pow(py,2),1.5) == 0) {
+	if (pow(pow(px,2) + pow(py,2),0.5) > 0.0001 || pow(pow(px,2) + pow(py,2),1.5) > 0.0001) {
 		cout << "Error: division by zero\n";
 	    return Hj_;
 	}
